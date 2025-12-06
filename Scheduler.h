@@ -43,7 +43,7 @@ public:
     
     // Getters
     double getTimeQuantum() const { return timeQuantum; }
-    int getProcessCount() const { return processes.size(); }
+    size_t getProcessCount() const { return processes.size(); }
 };
 
 #endif // SCHEDULER_H
