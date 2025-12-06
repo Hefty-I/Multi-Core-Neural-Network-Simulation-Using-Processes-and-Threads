@@ -208,10 +208,7 @@ std::vector<Process> Scheduler::priorityScheduling() {
     
     std::vector<Process> scheduled = processes;
     
-    // TODO: Implement Priority scheduling
     // Sort by priority (lower number = higher priority)
-    // Apply timing calculations
-    
     std::sort(scheduled.begin(), scheduled.end(),
               [](const Process& a, const Process& b) {
                   return a.getPriority() < b.getPriority();
@@ -220,7 +217,28 @@ std::vector<Process> Scheduler::priorityScheduling() {
     double currentTime = 0.0;
     
     for (auto& p : scheduled) {
-        // Your implementation here
+        // If current time is less than arrival time, CPU is idle
+        if (currentTime < p.getArrivalTime()) {
+            currentTime = p.getArrivalTime();
+        }
+        
+        // Response time = time when process starts - arrival time
+        double responseTime = currentTime - p.getArrivalTime();
+        p.setResponseTime(responseTime);
+        
+        // Process executes for its burst time
+        currentTime += p.getBurstTime();
+        
+        // Completion time = time when process finishes
+        p.setCompletionTime(currentTime);
+        
+        // Turnaround time = completion time - arrival time
+        double turnaroundTime = currentTime - p.getArrivalTime();
+        p.setTurnaroundTime(turnaroundTime);
+        
+        // Waiting time = turnaround time - burst time
+        double waitingTime = turnaroundTime - p.getBurstTime();
+        p.setWaitingTime(waitingTime);
     }
     
     displayResults(scheduled, "Priority");
