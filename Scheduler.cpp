@@ -380,20 +380,76 @@ std::vector<Process> Scheduler::srtfScheduling()
     resetProcesses();
 
     std::vector<Process> scheduled = processes;
-
-    // TODO: Implement SRTF (Preemptive SJF)
-    // This is the most complex algorithm
-    // 1. At each time unit, check which process has shortest remaining time
-    // 2. Execute that process for 1 time unit
-    // 3. Update remaining times
-    // 4. Repeat until all processes complete
-    // 5. Track context switches
-
     double currentTime = 0.0;
     int completed = 0;
     int n = scheduled.size();
+    std::vector<bool> firstTime(n, true);
+    int lastProcess = -1;
 
-    // Your implementation here
+    while (completed < n)
+    {
+        // Find process with shortest remaining time among arrived processes
+        int shortest = -1;
+        double minRemaining = 1e9;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (scheduled[i].getArrivalTime() <= currentTime &&
+                scheduled[i].getRemainingTime() > 0 &&
+                scheduled[i].getRemainingTime() < minRemaining)
+            {
+                minRemaining = scheduled[i].getRemainingTime();
+                shortest = i;
+            }
+        }
+
+        // If no process available, jump to next arrival
+        if (shortest == -1)
+        {
+            double nextArrival = 1e9;
+            for (int i = 0; i < n; i++)
+            {
+                if (scheduled[i].getRemainingTime() > 0)
+                {
+                    nextArrival = std::min(nextArrival, scheduled[i].getArrivalTime());
+                }
+            }
+            currentTime = nextArrival;
+            continue;
+        }
+
+        // Set response time when process first gets CPU
+        if (firstTime[shortest])
+        {
+            double responseTime = currentTime - scheduled[shortest].getArrivalTime();
+            scheduled[shortest].setResponseTime(responseTime);
+            firstTime[shortest] = false;
+        }
+
+        // Execute for a small time unit (0.01 for precision)
+        double execTime = 0.01;
+        if (scheduled[shortest].getRemainingTime() < execTime)
+        {
+            execTime = scheduled[shortest].getRemainingTime();
+        }
+
+        scheduled[shortest].setRemainingTime(scheduled[shortest].getRemainingTime() - execTime);
+        currentTime += execTime;
+
+        // If process completed
+        if (scheduled[shortest].getRemainingTime() < 0.0001)
+        { // Using small epsilon for floating point comparison
+            completed++;
+            scheduled[shortest].setCompletionTime(currentTime);
+            double turnaroundTime = currentTime - scheduled[shortest].getArrivalTime();
+            scheduled[shortest].setTurnaroundTime(turnaroundTime);
+            double waitingTime = turnaroundTime - scheduled[shortest].getBurstTime();
+            scheduled[shortest].setWaitingTime(waitingTime);
+            scheduled[shortest].setRemainingTime(0); // Ensure it's exactly 0
+        }
+
+        lastProcess = shortest;
+    }
 
     displayResults(scheduled, "SRTF");
     return scheduled;
