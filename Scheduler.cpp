@@ -172,8 +172,30 @@ std::vector<Process> Scheduler::sjfScheduling() {
     
     double currentTime = 0.0;
     
+    // SJF: Execute processes in order of shortest burst time
     for (auto& p : scheduled) {
-        // Your implementation here
+        // If CPU is idle, wait for the process to arrive
+        if (currentTime < p.getArrivalTime()) {
+            currentTime = p.getArrivalTime();
+        }
+        
+        // Response time = time when process first gets CPU - arrival time
+        double responseTime = currentTime - p.getArrivalTime();
+        p.setResponseTime(responseTime);
+        
+        // Execute the process
+        currentTime += p.getBurstTime();
+        
+        // Completion time = time when process finishes
+        p.setCompletionTime(currentTime);
+        
+        // Turnaround time = completion time - arrival time
+        double turnaroundTime = currentTime - p.getArrivalTime();
+        p.setTurnaroundTime(turnaroundTime);
+        
+        // Waiting time = turnaround time - burst time
+        double waitingTime = turnaroundTime - p.getBurstTime();
+        p.setWaitingTime(waitingTime);
     }
     
     displayResults(scheduled, "SJF");
